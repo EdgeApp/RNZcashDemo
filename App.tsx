@@ -36,6 +36,7 @@ function App(): JSX.Element {
   const [address, setAddress] = useState<string | undefined>();
   const [status, setStatus] = useState<string>('');
   const [update, setUpdate] = useState<string>('');
+  const [balance, setBalance] = useState<string>('');
 
   if (address != null) {
     console.log(`address: ${address}`);
@@ -72,6 +73,11 @@ function App(): JSX.Element {
         onStatusChanged: newStatus => {
           const date = new Date().toISOString().slice(11, 23);
           setStatus(`${date}: onStatusChanged: ${JSON.stringify(newStatus)}`);
+          if (newStatus.name === 'SYNCED') {
+            synchronizer.getShieldedBalance().then(walletBalance => {
+              setBalance(JSON.stringify(walletBalance));
+            });
+          }
         },
         onUpdate: event => {
           const date = new Date().toISOString().slice(11, 23);
@@ -92,6 +98,7 @@ function App(): JSX.Element {
       <Text>{`spendKey: ${spendKey}\n`}</Text>
       <Text>{`viewKey: ${viewKey?.extfvk}\n`}</Text>
       <Text>{`address: ${address}\n`}</Text>
+      <Text>{`balance: ${balance}\n`}</Text>
       <Text>{`status: ${status}\n`}</Text>
       <Text>{`update: ${update}\n`}</Text>
     </SafeAreaView>
