@@ -37,6 +37,7 @@ function App(): JSX.Element {
   const [status, setStatus] = useState<string>('');
   const [update, setUpdate] = useState<string>('');
   const [balance, setBalance] = useState<string>('');
+  const [blockHeight, setBlockHeight] = useState<number>(0);
 
   if (address != null) {
     console.log(`address: ${address}`);
@@ -82,6 +83,7 @@ function App(): JSX.Element {
         onUpdate: event => {
           const date = new Date().toISOString().slice(11, 23);
           setUpdate(`${date}: onUpdate: ${JSON.stringify(event)}`);
+          setBlockHeight(event.networkBlockHeight);
         },
       });
       synchronizer.start();
@@ -99,6 +101,7 @@ function App(): JSX.Element {
       <Text>{`viewKey: ${viewKey?.extfvk}\n`}</Text>
       <Text>{`address: ${address}\n`}</Text>
       <Text>{`balance: ${balance}\n`}</Text>
+      <Text>{`blockHeight: ${blockHeight}\n`}</Text>
       <Text>{`status: ${status}\n`}</Text>
       <Text>{`update: ${update}\n`}</Text>
     </SafeAreaView>
