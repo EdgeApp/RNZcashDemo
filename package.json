@@ -6,6 +6,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
+    "prepare": "(cd ios; pod repo update; pod install) && copyCheckpoints",
     "start": "react-native start",
     "test": "jest"
   },

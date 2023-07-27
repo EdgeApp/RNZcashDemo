@@ -59,4 +59,15 @@ target 'RNZcashDemo' do
     )
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
   end
+
+  pod 'CNIOAtomics', :modular_headers => true
+  pod 'CNIOBoringSSL', :modular_headers => true
+  pod 'CNIOBoringSSLShims', :modular_headers => true
+  pod 'CNIOLinux', :modular_headers => true
+  pod 'CNIODarwin', :modular_headers => true
+  pod 'CNIOHTTPParser', :modular_headers => true
+  pod 'CNIOWindows', :modular_headers => true
+  pod 'CGRPCZlib', :modular_headers => true
+  pod 'ZcashLightClientKit', :git => 'https://github.com/zcash/ZcashLightClientKit.git', :commit => '74f3ae20f26748e162c051e5fa343c71febc4294'
+
 end
