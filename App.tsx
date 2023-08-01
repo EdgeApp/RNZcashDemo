@@ -13,11 +13,12 @@ import {
   Text,
   useColorScheme,
 } from 'react-native';
-import {KeyTool} from 'react-native-zcash';
+import {AddressTool, KeyTool} from 'react-native-zcash';
 import {randomHex} from './config.json';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 LogBox.ignoreAllLogs();
+import {UnifiedViewingKey} from 'react-native-zcash/lib/src/types';
 
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -27,11 +28,24 @@ function App(): JSX.Element {
   };
 
   const [spendKey, setSpendKey] = useState<string | undefined>();
+  const [viewKey, setViewKey] = useState<UnifiedViewingKey | undefined>();
+  const [address, setAddress] = useState<string | undefined>();
+
+  if (address != null) {
+    console.log(`address: ${address}`);
+  }
 
   useEffect(() => {
     async function init() {
       const key = await KeyTool.deriveSpendingKey(randomHex, 'mainnet');
       setSpendKey(key);
+      const vKey = await KeyTool.deriveViewingKey(randomHex, 'mainnet');
+      setViewKey(vKey);
+      const addr = await AddressTool.deriveShieldedAddress(
+        vKey.extfvk,
+        'mainnet',
+      );
+      setAddress(addr);
     }
     init();
   }, []);
@@ -43,6 +57,8 @@ function App(): JSX.Element {
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <Text>{`spendKey: ${spendKey}\n`}</Text>
+      <Text>{`viewKey: ${viewKey?.extfvk}\n`}</Text>
+      <Text>{`address: ${address}\n`}</Text>
     </SafeAreaView>
   );
 }
