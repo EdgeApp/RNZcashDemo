@@ -8,16 +8,25 @@
 import React, {useEffect, useState} from 'react';
 import {
   LogBox,
+  FlatList,
   SafeAreaView,
+  ScrollView,
   StatusBar,
   Text,
   useColorScheme,
+  View,
 } from 'react-native';
 import {AddressTool, KeyTool, makeSynchronizer} from 'react-native-zcash';
-import {randomHex, defaultHost, defaultPort} from './config.json';
+import {
+  birthdayHeight,
+  randomHex,
+  defaultHost,
+  defaultPort,
+} from './config.json';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {
+  ConfirmedTransaction,
   InitializerConfig,
   UnifiedViewingKey,
 } from 'react-native-zcash/lib/src/types';
@@ -38,6 +47,7 @@ function App(): JSX.Element {
   const [update, setUpdate] = useState<string>('');
   const [balance, setBalance] = useState<string>('');
   const [blockHeight, setBlockHeight] = useState<number>(0);
+  const [transactions, setTransactions] = useState<ConfirmedTransaction[]>([]);
 
   if (address != null) {
     console.log(`address: ${address}`);
@@ -55,10 +65,10 @@ function App(): JSX.Element {
       );
       setAddress(addr);
 
-      const birthdayHeight = await KeyTool.getBirthdayHeight(
-        defaultHost,
-        defaultPort,
-      );
+      // const birthdayHeight = await KeyTool.getBirthdayHeight(
+      //   defaultHost,
+      //   defaultPort,
+      // );
       // Initialize the synchronizer
       const initializerConfig: InitializerConfig = {
         networkName: 'mainnet',
@@ -69,6 +79,8 @@ function App(): JSX.Element {
         birthdayHeight,
       };
 
+      let localBlockHeight = 0;
+
       const synchronizer = await makeSynchronizer(initializerConfig);
       synchronizer.subscribe({
         onStatusChanged: newStatus => {
@@ -78,12 +90,24 @@ function App(): JSX.Element {
             synchronizer.getShieldedBalance().then(walletBalance => {
               setBalance(JSON.stringify(walletBalance));
             });
+            console.log(
+              `getTransactions: ${birthdayHeight} -> ${localBlockHeight}`,
+            );
+            synchronizer
+              .getTransactions({
+                first: birthdayHeight,
+                last: localBlockHeight,
+              })
+              .then(txs => {
+                setTransactions(txs);
+              });
           }
         },
         onUpdate: event => {
           const date = new Date().toISOString().slice(11, 23);
           setUpdate(`${date}: onUpdate: ${JSON.stringify(event)}`);
           setBlockHeight(event.networkBlockHeight);
+          localBlockHeight = event.networkBlockHeight;
         },
       });
       synchronizer.start();
@@ -91,19 +115,41 @@ function App(): JSX.Element {
     init();
   }, []);
 
+  const renderItem = ({item}: {item: ConfirmedTransaction}) => {
+    const date = `Date: ${new Date(
+      item.blockTimeInSeconds * 1000,
+    ).toISOString()}`;
+    const txid = `Txid: ${item.rawTransactionId}`;
+    const value = `Zatoshis: ${item.value}`;
+    const toAddr = item.toAddress != null ? `ToAddress: ${item.toAddress}` : '';
+
+    return (
+      <View>
+        <Text>{`${date}\n${txid}\n${value}\n${toAddr}\n\n`}</Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      <Text>{`spendKey: ${spendKey}\n`}</Text>
-      <Text>{`viewKey: ${viewKey?.extfvk}\n`}</Text>
-      <Text>{`address: ${address}\n`}</Text>
-      <Text>{`balance: ${balance}\n`}</Text>
-      <Text>{`blockHeight: ${blockHeight}\n`}</Text>
-      <Text>{`status: ${status}\n`}</Text>
-      <Text>{`update: ${update}\n`}</Text>
+      <ScrollView>
+        <Text>{`spendKey: ${spendKey}\n`}</Text>
+        <Text>{`viewKey: ${viewKey?.extfvk}\n`}</Text>
+        <Text>{`address: ${address}\n`}</Text>
+        <Text>{`balance: ${balance}\n`}</Text>
+        <Text>{`blockHeight: ${blockHeight}\n`}</Text>
+        <Text>{`status: ${status}\n`}</Text>
+        <Text>{`update: ${update}\n`}</Text>
+        <FlatList
+          data={transactions}
+          renderItem={renderItem}
+          keyExtractor={item => item.rawTransactionId}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 }
