@@ -7,16 +7,23 @@
 
 import React, {useEffect, useState} from 'react';
 import {
+  Button,
   LogBox,
   FlatList,
   SafeAreaView,
   ScrollView,
   StatusBar,
   Text,
+  TextInput,
   useColorScheme,
   View,
 } from 'react-native';
-import {AddressTool, KeyTool, makeSynchronizer} from 'react-native-zcash';
+import {
+  AddressTool,
+  KeyTool,
+  makeSynchronizer,
+  Synchronizer,
+} from 'react-native-zcash';
 import {
   birthdayHeight,
   randomHex,
@@ -40,6 +47,12 @@ function App(): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  const [destAddress, setDestAddress] = useState<string | undefined>();
+  const [destAmount, setDestAmount] = useState<string | undefined>();
+  const [destMemo, setDestMemo] = useState<string | undefined>();
+  const [synchronizer2, setSynchronizer2] = useState<
+    Synchronizer | undefined
+  >();
   const [spendKey, setSpendKey] = useState<string | undefined>();
   const [viewKey, setViewKey] = useState<UnifiedViewingKey | undefined>();
   const [address, setAddress] = useState<string | undefined>();
@@ -82,6 +95,7 @@ function App(): JSX.Element {
       let localBlockHeight = 0;
 
       const synchronizer = await makeSynchronizer(initializerConfig);
+      setSynchronizer2(synchronizer);
       synchronizer.subscribe({
         onStatusChanged: newStatus => {
           const date = new Date().toISOString().slice(11, 23);
@@ -137,6 +151,52 @@ function App(): JSX.Element {
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView>
+        <Text>{'Spend'}</Text>
+        <TextInput
+          onChangeText={setDestAddress}
+          returnKeyType="next"
+          placeholder="Address"
+          value={destAddress}
+        />
+        <TextInput
+          onChangeText={setDestAmount}
+          keyboardType="decimal-pad"
+          returnKeyType="next"
+          placeholder="Amount (Zatoshis)"
+          value={destAmount}
+        />
+        <TextInput
+          onChangeText={setDestMemo}
+          returnKeyType="next"
+          placeholder="Memo"
+          value={destMemo}
+        />
+
+        <Button
+          title="Send"
+          onPress={() => {
+            if (
+              synchronizer2 == null ||
+              destAmount == null ||
+              destAddress == null ||
+              spendKey == null
+            ) {
+              return;
+            }
+            synchronizer2
+              .sendToAddress({
+                zatoshi: destAmount,
+                toAddress: destAddress,
+                memo: destMemo ?? '',
+                fromAccountIndex: 0,
+                spendingKey: spendKey,
+              })
+              .then(result => {
+                console.log(JSON.stringify(result, null, 2));
+              });
+          }}
+        />
+
         <Text>{`spendKey: ${spendKey}\n`}</Text>
         <Text>{`viewKey: ${viewKey?.extfvk}\n`}</Text>
         <Text>{`address: ${address}\n`}</Text>
