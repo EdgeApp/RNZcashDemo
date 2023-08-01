@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   LogBox,
   SafeAreaView,
@@ -13,6 +13,8 @@ import {
   Text,
   useColorScheme,
 } from 'react-native';
+import {KeyTool} from 'react-native-zcash';
+import {randomHex} from './config.json';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 LogBox.ignoreAllLogs();
@@ -24,13 +26,23 @@ function App(): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  const [spendKey, setSpendKey] = useState<string | undefined>();
+
+  useEffect(() => {
+    async function init() {
+      const key = await KeyTool.deriveSpendingKey(randomHex, 'mainnet');
+      setSpendKey(key);
+    }
+    init();
+  }, []);
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      <Text>Hello World</Text>
+      <Text>{`spendKey: ${spendKey}\n`}</Text>
     </SafeAreaView>
   );
 }
